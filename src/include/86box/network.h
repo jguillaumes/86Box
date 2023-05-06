@@ -52,6 +52,7 @@
 #define NET_TYPE_SLIRP 1 /* use the SLiRP port forwarder */
 #define NET_TYPE_PCAP  2 /* use the (Win)Pcap API */
 #define NET_TYPE_VDE   3 /* use the VDE plug API */
+#define NET_TYPE_UDP   4 /* Use the UDP bridge for networking */
 
 #define NET_MAX_FRAME  1518
 /* Queue size must be a power of 2 */
@@ -153,10 +154,11 @@ typedef struct {
     int has_slirp: 1;
     int has_pcap: 1;
     int has_vde:  1;
+    int has_udp:  1;
 } network_devmap_t;
 
 
-#define HAS_NOSLIRP_NET(x)  (x.has_pcap || x.has_vde)
+#define HAS_NOSLIRP_NET(x)  (x.has_pcap || x.has_vde || x.has_udp)
 
 #ifdef __cplusplus
 extern "C" {
@@ -180,10 +182,12 @@ extern int        network_available(void);
 extern void       network_tx(netcard_t *card, uint8_t *, int);
 
 extern int net_pcap_prepare(netdev_t *);
+extern int net_udp_prepare(netdev_t *);
+#ifdef HAS_VDE
 extern int net_vde_prepare(void);
+#endif
 
-
-extern void            network_connect(int id, int connect);
+void            network_connect(int id, int connect);
 extern int             network_is_connected(int id);
 extern int             network_dev_available(int);
 extern int             network_dev_to_id(char *);
