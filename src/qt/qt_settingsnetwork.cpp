@@ -38,16 +38,21 @@ SettingsNetwork::enableElements(Ui::SettingsNetwork *ui)
         auto *intf_cbox     = findChild<QComboBox *>(QString("comboBoxIntf%1").arg(i + 1));
         auto *conf_btn      = findChild<QPushButton *>(QString("pushButtonConf%1").arg(i + 1));
         auto *socket_line   = findChild<QLineEdit *>(QString("socketVDENIC%1").arg(i + 1));
+        auto *udp_peer      = findChild<QLineEdit *>(QString("udpPeer%1").arg(i+1));
+        auto *udp_port      = findChild<QLineEdit *>(QString("udpPort%1").arg(i+1));
 
         int  netType         = net_type_cbox->currentData().toInt();
         bool adaptersEnabled = netType == NET_TYPE_SLIRP 
                                     || NET_TYPE_VDE  
-                                    || (netType == NET_TYPE_PCAP && intf_cbox->currentData().toInt() > 0);
+                                    || (netType == NET_TYPE_PCAP && intf_cbox->currentData().toInt() > 0)
+                                    || NET_TYPE_UDP;
 
         intf_cbox->setEnabled(net_type_cbox->currentData().toInt() == NET_TYPE_PCAP);
         nic_cbox->setEnabled(adaptersEnabled);
         conf_btn->setEnabled(adaptersEnabled && network_card_has_config(nic_cbox->currentData().toInt()));
         socket_line->setEnabled(net_type_cbox->currentData().toInt() == NET_TYPE_VDE);
+        udp_peer->setEnabled(net_type_cbox->currentData().toInt() == NET_TYPE_UDP);
+        udp_port->setEnabled(net_type_cbox->currentData().toInt() == NET_TYPE_UDP);
     }
 }
 
@@ -63,7 +68,6 @@ SettingsNetwork::SettingsNetwork(QWidget *parent)
         auto *nic_cbox      = findChild<QComboBox *>(QString("comboBoxNIC%1").arg(i + 1));
         auto *net_type_cbox = findChild<QComboBox *>(QString("comboBoxNet%1").arg(i + 1));
         auto *intf_cbox     = findChild<QComboBox *>(QString("comboBoxIntf%1").arg(i + 1));
-        auto *socket_line   = findChild<QLineEdit *>(QString("socketVDENIC%1").arg(i + 1));
         connect(nic_cbox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsNetwork::on_comboIndexChanged);
         connect(net_type_cbox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsNetwork::on_comboIndexChanged);
         connect(intf_cbox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, &SettingsNetwork::on_comboIndexChanged);
@@ -142,7 +146,8 @@ SettingsNetwork::onCurrentMachineChanged(int machineId)
         if (network_devmap.has_vde) {
             Models::AddEntry(model, "VDE", NET_TYPE_VDE);
         }
-        
+        Models::AddEntry(model, "UDP", NET_TYPE_UDP);
+
         model->removeRows(0, removeRows);
         cbox->setCurrentIndex(net_cards_conf[i].net_type);
 
